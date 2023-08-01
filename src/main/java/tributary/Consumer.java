@@ -54,11 +54,6 @@ public class Consumer<T> {
         return this.consumedEvents;
     }
 
-    // This method could be used to consume messages from a partition.
-    //public Message<T> consume(Partition<T> partition) {
-        // Logic to consume messages goes here.
-   // }
-
     // helper method to consume single event:
     public T consumeEvent(String partitionId) {
         Partition<T> partition = partitions.get(partitionId);

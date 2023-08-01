@@ -32,7 +32,7 @@ public class CLI {
                     case "createConsumer":
                         tributary.createConsumer(command[1], command[2]);
                         break;
-                    case "deleteConsumer": 
+                    case "deleteConsumer":
                         tributary.deleteConsumer(command[1], command[2]);
                         break;
                     case "createProducer":
@@ -75,7 +75,7 @@ public class CLI {
                         System.out.println("Exiting Tributary...");
                         scanner.close();
                         return;
-                    default: 
+                    default:
                         System.out.println("command is Invalid");
                         break;
                 }

@@ -1,5 +1,5 @@
 package tributary;
-import java.util.ArrayList;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,23 +9,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import javax.servlet.http.Part;
-
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-public class Tributary<T>{
+public class Tributary<T> {
     private Map<String, Topic<T>> topics;
     private Map<String, ConsumerGroup<T>> consumerGroups;
     private Map<String, Producer<T>> producers;
     private Map<String, Consumer<T>> consumers;
-    private Map<String, Partition<T>> partitions;
 
     public Tributary() {
         this.topics = new HashMap<>();
@@ -46,7 +41,7 @@ public class Tributary<T>{
         } else {
             throw new IllegalArgumentException("Type must be either 'Integer' or 'String'");
         }
-        
+
         Topic<T> topic = new Topic<T>(id, typeClass);
         topics.put(id, topic);
         System.out.println("Topic created with ID: " + id + " and Type: " + type);
@@ -59,16 +54,16 @@ public class Tributary<T>{
         if (partitionId == null || partitionId.trim().isEmpty()) {
             throw new IllegalArgumentException("Partition ID cannot be null or empty");
         }
-        
+
         Topic<T> topic = topics.get(topicId);
         if (topic == null) {
             throw new IllegalArgumentException("Topic: " + topicId + " not found");
         }
-        
+
         if (topic.getPartitions().containsKey(partitionId)) {
             throw new IllegalArgumentException("Partition ID: " + partitionId + " already exists in Topic: " + topicId);
         }
-        
+
         topic.addPartition(partitionId);
         System.out.println("Partition: " + partitionId + " created in Topic: " + topicId);
     }
@@ -81,7 +76,7 @@ public class Tributary<T>{
         ConsumerGroup<T> consumerGroup = new ConsumerGroup<T>(id, topic, rebalancing);
         consumerGroups.put(id, consumerGroup);
         System.out.println("Consumer Group created with ID: " + id);
-        
+
     }
 
     public void createConsumer(String groupId, String consumerId) {
@@ -96,7 +91,7 @@ public class Tributary<T>{
         consumerGroup.addConsumer(newConsumer);
         consumers.put(consumerId, newConsumer);
         System.out.println("Consumer: " + consumerId + " created in Consumer Group: " + groupId);
-        
+
     }
 
     public void deleteConsumer(String groupId, String consumerId) {
@@ -112,18 +107,18 @@ public class Tributary<T>{
             }
         }
         if (removingConsumer == null) {
-            throw new IllegalArgumentException("Consumer: " + consumerId + " cannot be found in Consumer Group: " + groupId);
+            throw new IllegalArgumentException("Consumer: " + consumerId + " not found in Consumer Group: " + groupId);
         }
         consumerGroup.getConsumers().remove(removingConsumer);
         consumers.remove(consumerId);
         System.out.println("Consumer: " + consumerId + " removed from Consumer Group: " + groupId);
         consumerGroup.performRebalancing();
         System.out.println("Consumer Group: " + groupId + " has been successfully rebalnced");
-          
+
     }
 
     public void createProducer(String id, String type, String allocation) {
-        Class<?> classType; 
+        Class<?> classType;
         if (type.equals("Integer")) {
             classType = Integer.class;
         } else if (type.equals("String")) {
@@ -147,22 +142,21 @@ public class Tributary<T>{
         System.out.println("Producer created with ID: " + id + " and Type: " + type);
 
     }
-    
+
     public void produceEvent(String producerId, String topicId, String eventFileName, String partitionId) {
-        System.out.println("Attempting to produce event with producerId: " + producerId + ", topicId: " + topicId + ", eventFileName: " + eventFileName + ", partitionId: " + partitionId);
         Producer<T> producer = producers.get(producerId);
         Topic<T> topic = topics.get(topicId);
         if (producer == null) {
             System.out.println("Producer: " + producerId + " cannot be found");
             return;
-        } 
+        }
         if (topic == null) {
             System.out.println("Topic: " + topicId + " cannot be found");
             return;
         }
 
         @SuppressWarnings("unchecked")
-        T event = parseJsonToEvent(eventFileName, (Class<T>)producer.getType());
+        T event = parseJsonToEvent(eventFileName, (Class<T>) producer.getType());
         if (event == null) {
             System.out.println("Event file: " + eventFileName + " could not be parsed to type: " + producer.getType());
             return;
@@ -177,11 +171,11 @@ public class Tributary<T>{
             producer.produce(event);
             System.out.println("Event id: " + event + ", was added to a random partition");
         } else {
-            System.out.println("Manual partition: " + partitionId + " cannot be found or allocation method is not manual");
+            System.out.println("Manual partition: " + partitionId + " not found or allocation method  not manual");
         }
 
         if (partition != null) {
-            System.out.println("Current events in partition: " + partition.getEvents()); 
+            System.out.println("Current events in partition: " + partition.getEvents());
             System.out.println("Events in partition " + partitionId + ": " + partition.getEvents());
         }
     }
@@ -193,7 +187,8 @@ public class Tributary<T>{
         }
         Partition<T> partition = consumer.getPartitions().get(partitionId);
         if (partition == null) {
-            throw new IllegalArgumentException("Consumer: " + consumerId + " is not allocated to the partition: " + partitionId); 
+            throw new IllegalArgumentException("Consumer: " + consumerId
+            + " is not allocated to the partition: " + partitionId);
         }
         if (partition != null && !partition.getEvents().isEmpty()) {
             Map.Entry<String, T> entry = partition.getEvents().entrySet().iterator().next();
@@ -215,7 +210,8 @@ public class Tributary<T>{
         }
         Partition<T> partition = consumer.getPartitions().get(partitionId);
         if (partition == null) {
-            throw new IllegalArgumentException("Consumer: " + consumerId + " is not allocated to the partition: " + partitionId); 
+            throw new IllegalArgumentException("Consumer: " + consumerId
+            + " not allocated to partition: " + partitionId);
         }
         if (partition != null) {
             Iterator<Map.Entry<String, T>> eventIterator = partition.getEvents().entrySet().iterator();
@@ -286,9 +282,10 @@ public class Tributary<T>{
         for (String eventFileName : eventFileNames) {
             executorService.submit(() -> {
                 @SuppressWarnings("unchecked")
-                T event = parseJsonToEvent(eventFileName, (Class<T>)producer.getType());
+                T event = parseJsonToEvent(eventFileName, (Class<T>) producer.getType());
                 if (event == null) {
-                    System.out.println("Event file: " + eventFileName + " could not be parsed to type: " + producer.getType());
+                    System.out.println("Event file: " + eventFileName
+                    + " could not be parsed to type: " + producer.getType());
                     return;
                 }
                 System.out.println("Parsed event: " + event);
@@ -296,7 +293,7 @@ public class Tributary<T>{
                     String partitionId = producer.produce(event);
                     System.out.println("Event id: " + event + ", was added to a random partition: " + partitionId);
                 } else {
-                    System.out.println("Allocation method was not random"); 
+                    System.out.println("Allocation method was not random");
                 }
             });
         }
@@ -321,7 +318,8 @@ public class Tributary<T>{
                     if (event == null) {
                         System.out.println("No more events to consume from partition: " + partitionId);
                     } else {
-                        System.out.println("Consumer: " + consumerId + " consumed event from partition: " + partitionId);
+                        System.out.println("Consumer: " + consumerId
+                        + " consumed event from partition: " + partitionId);
                     }
                 }
             });
@@ -345,7 +343,8 @@ public class Tributary<T>{
             throw new IllegalArgumentException("Consumer Group: " + groupId + " cannot be found");
         }
         consumerGroup.setRebalancedMethod(rebalancingMethod);
-        System.out.println("Rebalancing method for Consumer Group: " + groupId + " has been set to: " + rebalancingMethod);
+        System.out.println("Rebalancing method for Consumer Group: " + groupId
+        + " has been set to: " + rebalancingMethod);
     }
 
     public void playback(String consumerId, String partitionId, int offset) {
@@ -355,7 +354,8 @@ public class Tributary<T>{
         }
         Partition<T> partition = consumer.getPartitions().get(partitionId);
         if (partition == null) {
-            throw new IllegalArgumentException("Partition: " + partitionId + " cannot be found for consumer: " + consumerId);
+            throw new IllegalArgumentException("Partition: " + partitionId
+            + " cannot be found for consumer: " + consumerId);
         }
         Map<String, T> events = partition.getEvents();
         if (events.size() <= offset) {
@@ -401,7 +401,8 @@ public class Tributary<T>{
         Topic<T> topic = consumerGroup.getTopic();
         Partition<T> partition = topic.getPartitions().get(partitionId);
         if (partition == null) {
-            throw new IllegalArgumentException("Partition: " + partitionId + " cannot be found in Topic: " + topic.getId());
+            throw new IllegalArgumentException("Partition: " + partitionId
+            + " cannot be found in Topic: " + topic.getId());
         }
         consumer.addPartition(partition);
         consumerGroup.performRebalancing();
@@ -440,7 +441,8 @@ public class Tributary<T>{
                 if (partition.getProducer() != null && partition.getProducer().equals(producer)) {
                     consumer.addTopic(topic);
                     consumer.addPartition(partition);
-                    System.out.println("Consumer: " + consumerId + " subscribed to producer: " + producerId);
+                    System.out.println("Consumer: " + consumerId
+                    + " subscribed to producer: " + producerId);
                     break;
                 }
             }
@@ -471,5 +473,5 @@ public class Tributary<T>{
     public Map<String, Consumer<T>> getConsumers() {
         return this.consumers;
     }
-    
+
 }

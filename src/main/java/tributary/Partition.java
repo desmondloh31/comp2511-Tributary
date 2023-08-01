@@ -7,16 +7,15 @@ import java.util.Map;
 import java.util.UUID;
 
 public class Partition<T> {
-    private String Id;
+    private String id;
     private Queue<Message<T>> messages;
     private Map<String, T> events;
     private Producer<T> producer;
 
     public Partition(String id) {
-        this.Id = id;
+        this.id = id;
         this.messages = new LinkedList<>();
         this.events = new HashMap<>();
-        this.producer = producer;
     }
 
     public void addMessage(Message<T> message) {
@@ -28,11 +27,11 @@ public class Partition<T> {
     }
 
     public String getId() {
-        return Id;
+        return id;
     }
 
     public void setId(String id) {
-        this.Id = id;
+        this.id = id;
     }
 
     public Queue<Message<T>> getMessages() {

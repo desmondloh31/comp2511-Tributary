@@ -5,13 +5,13 @@ import java.util.List;
 import java.util.Map;
 
 public class ConsumerGroup<T> {
-    private String Id;
+    private String id;
     private Topic<T> topic;
     private List<Consumer<T>> consumers;
     private RebalancingMethod rebalancingMethod;
 
     public ConsumerGroup(String id, Topic<T> topic, RebalancingMethod rebalancingMethod) {
-        this.Id = id;
+        this.id = id;
         this.topic = topic;
         this.rebalancingMethod = rebalancingMethod;
         this.consumers = new ArrayList<>();
@@ -27,7 +27,7 @@ public class ConsumerGroup<T> {
             Partition<T> partition = partitionsAll.get(i);
             assignedConsumer.addPartition(partition);
         }
-        System.out.println("Completed Rebalancing for Consumer Group: " + Id);
+        System.out.println("Completed Rebalancing for Consumer Group: " + id);
     }
 
     public void addConsumer(Consumer<T> consumer) {
@@ -54,13 +54,12 @@ public class ConsumerGroup<T> {
         this.rebalancingMethod = rebalancingMethod;
     }
 
-    
     public String getId() {
-        return Id;
+        return id;
     }
 
     public void setId(String id) {
-        this.Id = id;
+        this.id = id;
     }
 
     public Topic<T> getTopic() {

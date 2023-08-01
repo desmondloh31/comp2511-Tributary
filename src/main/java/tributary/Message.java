@@ -3,15 +3,16 @@ package tributary;
 import java.time.LocalDateTime;
 
 public class Message<T> {
+
     private LocalDateTime dateTimeCreated;
-    private String Id;
+    private String id;
     private String payloadType;
     private String key;
     private T value;
 
     public Message(LocalDateTime dateTimeCreated, String id, String payloadType, String key, T value) {
         this.dateTimeCreated = dateTimeCreated;
-        this.Id = id;
+        this.id = id;
         this.payloadType = payloadType;
         this.key = key;
         this.value = value;
@@ -26,11 +27,11 @@ public class Message<T> {
     }
 
     public String getId() {
-        return Id;
+        return id;
     }
 
     public void setId(String id) {
-        this.Id = id;
+        this.id = id;
     }
 
     public String getPayloadType() {

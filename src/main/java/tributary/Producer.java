@@ -19,14 +19,13 @@ public class Producer<T> {
 
     public String produce(T event) {
         String partitionId = null;
-    
         if (allocationMethod == AllocationMethod.RANDOM) {
             Topic<T> topic = getRandomTopic();
             if (topic != null) {
                 Partition<T> partition = getRandomPartition(topic);
                 if (partition != null) {
                     partition.addEvent(event);
-                    partitionId = partition.getId(); 
+                    partitionId = partition.getId();
                 } else {
                     System.out.println("No partitions in topic " + topic.getId());
                 }
@@ -44,7 +43,7 @@ public class Producer<T> {
                     partition.addEvent(event);
                     partitionId = partition.getId();
                 } else {
-                    System.out.println("No partitions in topic " + topic.getId()); 
+                    System.out.println("No partitions in topic " + topic.getId());
                 }
             } else {
                 System.out.println("No topics available");
@@ -95,5 +94,4 @@ public class Producer<T> {
         this.allocationMethod = allocationMethod;
     }
 
-    
 }

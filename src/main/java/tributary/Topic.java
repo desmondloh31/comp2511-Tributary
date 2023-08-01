@@ -7,23 +7,23 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class Topic<T> {
-    private String Id;
+    private String id;
     private Class<?> type;
     private Map<String, Partition<T>> partitions;
     private Random random = new Random();
 
     public Topic(String id, Class<?> type) {
-        this.Id = id;
+        this.id = id;
         this.type = type;
         this.partitions = new HashMap<>();
     }
 
     public String getId() {
-        return Id;
+        return id;
     }
 
     public void setId(String id) {
-        this.Id = id;
+        this.id = id;
     }
 
     public Class<?> getType() {
@@ -45,7 +45,7 @@ public class Topic<T> {
     }
 
     public Partition<T> getRandomPartition() {
-        if(partitions.isEmpty()){
+        if (partitions.isEmpty()) {
             return null;
         }
         ArrayList<String> keys = new ArrayList<>(partitions.keySet());

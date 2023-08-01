@@ -3,9 +3,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Iterator;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.Part;
 
@@ -184,41 +186,50 @@ public class Tributary<T>{
         }
     }
 
-    public T consumeEvent(String consumerId, String partitionId) {
+    public void consumeEvent(String consumerId, String partitionId) {
         Consumer<T> consumer = consumers.get(consumerId);
-        if (consumer != null) {
-            Partition<T> partition = consumer.getPartitions().get(partitionId);
-            if (partition != null) {
-                T consumedEvent = consumer.consumeEvent(partitionId);
-                if (consumedEvent != null) {
-                    System.out.println("Consumer: " + consumerId + " consumed event from partition: " + partitionId);
-                } else {
-                    System.out.println("No event to consume from partition: " + partitionId);
-                }
-                return consumedEvent;
-            } else {
-                System.out.println("Partition: " + partitionId + " cannot be found for Consumer: " + consumerId);
-            }
-        } else {
-            System.out.println("Consumer: " + consumerId + " cannot be found");
+        if (consumer == null) {
+            throw new IllegalArgumentException("Consumer: " + consumerId + " cannot be found");
         }
-        return null;
+        Partition<T> partition = consumer.getPartitions().get(partitionId);
+        if (partition == null) {
+            throw new IllegalArgumentException("Consumer: " + consumerId + " is not allocated to the partition: " + partitionId); 
+        }
+        if (partition != null && !partition.getEvents().isEmpty()) {
+            Map.Entry<String, T> entry = partition.getEvents().entrySet().iterator().next();
+            String eventId = entry.getKey();
+            T event = entry.getValue();
+            partition.getEvents().remove(eventId);
+            consumer.getConsumedEvents().add(event.toString());
+            System.out.println("Consumed Event ID: " + eventId);
+            System.out.println("Event Contents: " + event);
+        } else {
+            System.out.println("No event available for consumption in partition: " + partitionId);
+        }
     }
 
-    public List<T> consumeEvents(String consumerId, String partitionId, int numberOfEvents) {
+    public void consumeEvents(String consumerId, String partitionId, int numberOfEvents) {
         Consumer<T> consumer = consumers.get(consumerId);
-        if (consumer != null) {
-            List<T> consumedEvents = consumer.consumeEvents(partitionId, numberOfEvents);
-            if (!consumedEvents.isEmpty()) {
-                System.out.println("Consumer: " + consumerId + " consumed " + consumedEvents.size() + " events from partition: " + partitionId);
-            } else {
-                System.out.println("No events to consume from partition: " + partitionId);
-            }
-            return consumedEvents;
-        } else {
-            System.out.println("Consumer: " + consumerId + " cannot be found");
+        if (consumer == null) {
+             throw new IllegalArgumentException("Consumer: " + consumerId + " cannot be found");
         }
-        return new ArrayList<>();
+        Partition<T> partition = consumer.getPartitions().get(partitionId);
+        if (partition == null) {
+            throw new IllegalArgumentException("Consumer: " + consumerId + " is not allocated to the partition: " + partitionId); 
+        }
+        if (partition != null) {
+            Iterator<Map.Entry<String, T>> eventIterator = partition.getEvents().entrySet().iterator();
+            while (eventIterator.hasNext() && numberOfEvents > 0) {
+                Map.Entry<String, T> entry = eventIterator.next();
+                String eventId = entry.getKey();
+                T event = entry.getValue();
+                eventIterator.remove();
+                consumer.getConsumedEvents().add(event.toString());
+                System.out.println("Consumed Event ID: " + eventId);
+                System.out.println("Event Contents: " + event);
+                numberOfEvents--;
+            }
+        }
     }
 
     public void showTopic(String topicId) {
@@ -262,11 +273,13 @@ public class Tributary<T>{
         Producer<T> producer = producers.get(producerId);
         Topic<T> topic = topics.get(topicId);
         if (producer == null) {
-            System.out.println("Producer: " + producerId + " cannot be found");
-            return;
+            throw new IllegalArgumentException("Producer: " + producerId + " cannot be found");
         }
         if (topic == null) {
-            System.out.println("Topic: " + topicId + " cannot be found");
+            throw new IllegalArgumentException("Topic: " + producerId + " cannot be found");
+        }
+        if (eventFileNames.isEmpty()) {
+            System.out.println("Event list is empty. No events to produce.");
             return;
         }
         ExecutorService executorService = Executors.newFixedThreadPool(eventFileNames.size());
@@ -293,26 +306,34 @@ public class Tributary<T>{
     public void parallelConsume(String consumerId, String partitionId, int numberOfEvents) {
         Consumer<T> consumer = consumers.get(consumerId);
         if (consumer == null) {
-            System.out.println("Consumer: " + consumerId + " cannot be found");
-            return;
+            throw new IllegalArgumentException("Consumer: " + consumerId + " cannot be found");
         }
         Partition<T> partition = consumer.getPartitions().get(partitionId);
         if (partition == null) {
-            System.out.println("Partition: " + partitionId + " cannot be found");
-            return;
+            throw new IllegalArgumentException("Partition: " + partitionId + " cannot be found");
         }
-        ExecutorService executorService = Executors.newFixedThreadPool(numberOfEvents);
+        int numberOfThreads = Math.min(numberOfEvents, Runtime.getRuntime().availableProcessors());
+        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
         for (int count = 0; count < numberOfEvents; count++) {
             executorService.submit(() -> {
-                T event = consumer.consumeEvent(partitionId);
-                if (event == null) {
-                    System.out.println("No more events to consume from partition: " + partitionId);
-                } else {
-                    System.out.println("Consumer: " + consumerId + " consumed event from partition: " + partitionId);
+                synchronized (consumer) {
+                    T event = consumer.consumeEvent(partitionId);
+                    if (event == null) {
+                        System.out.println("No more events to consume from partition: " + partitionId);
+                    } else {
+                        System.out.println("Consumer: " + consumerId + " consumed event from partition: " + partitionId);
+                    }
                 }
             });
         }
         executorService.shutdown();
+        try {
+            if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
+            }
+        } catch (InterruptedException exception) {
+            executorService.shutdownNow();
+        }
     }
 
     public void setConsumerGroupRebalancing(String groupId, RebalancingMethod rebalancingMethod) {
@@ -444,6 +465,11 @@ public class Tributary<T>{
     // helper method to get all producers:
     public Map<String, Producer<T>> getProducers() {
         return producers;
+    }
+
+    // This method is used to get all consumers.
+    public Map<String, Consumer<T>> getConsumers() {
+        return this.consumers;
     }
     
 }

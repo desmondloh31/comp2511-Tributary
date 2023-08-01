@@ -10,14 +10,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 public class ParallelTest {
-    
+
     @Test
     @Tag("01-1")
     @DisplayName("Testing parallelProduce method")
@@ -95,13 +94,19 @@ public class ParallelTest {
 
         List<String> filePaths = Arrays.asList(filePathEvent1, filePathEvent2, filePathEvent3);
 
-        assertThrows(IllegalArgumentException.class, () -> tributary.parallelProduce("non_existing_producer", "topic1", filePaths));
-        assertThrows(IllegalArgumentException.class, () -> tributary.parallelProduce("random", "topi2", filePaths));
-        assertThrows(IllegalArgumentException.class, () -> tributary.parallelProduce("bad", "topic1", filePaths));
+        assertThrows(IllegalArgumentException.class, () ->
+        tributary.parallelProduce("non_existing_producer", "topic1", filePaths));
+        assertThrows(IllegalArgumentException.class, () ->
+        tributary.parallelProduce("random", "topi2", filePaths));
+        assertThrows(IllegalArgumentException.class, () ->
+        tributary.parallelProduce("bad", "topic1", filePaths));
 
-        assertThrows(IllegalArgumentException.class, () -> tributary.parallelProduce("producer1", "non_existing_topic", filePaths));
-        assertThrows(IllegalArgumentException.class, () -> tributary.parallelProduce("producer1", "random", filePaths));
-        assertThrows(IllegalArgumentException.class, () -> tributary.parallelProduce("producer1", "bad", filePaths));
+        assertThrows(IllegalArgumentException.class, () ->
+        tributary.parallelProduce("producer1", "non_existing_topic", filePaths));
+        assertThrows(IllegalArgumentException.class, () ->
+        tributary.parallelProduce("producer1", "random", filePaths));
+        assertThrows(IllegalArgumentException.class, () ->
+        tributary.parallelProduce("producer1", "bad", filePaths));
     }
 
     @Test
@@ -116,7 +121,8 @@ public class ParallelTest {
         tributary.createProducer("producer1", "String", "Random");
 
         String basePathInvalidEvent = new File("").getAbsolutePath();
-        String filePathInvalidEvent = new File(basePathInvalidEvent, "src/test/resources/invalid_event.json").getAbsolutePath();
+        String filePathInvalidEvent = new File(basePathInvalidEvent,
+        "src/test/resources/invalid_event.json").getAbsolutePath();
         List<String> invalidFilePaths = Arrays.asList(filePathInvalidEvent);
 
         assertDoesNotThrow(() -> tributary.parallelProduce("producer1", "topic1", invalidFilePaths));
@@ -139,20 +145,19 @@ public class ParallelTest {
 
     }
 
-
     @Test
     @Tag("01-5")
     @DisplayName("Testing parallelConsume method")
     public void testParallelConsume() {
 
         Tributary<String> tributary = new Tributary<>();
-  
+
         String basePathEvent1 = new File("").getAbsolutePath();
         String filePathEvent1 = new File(basePathEvent1, "src/test/resources/event1.json").getAbsolutePath();
         tributary.createTopic("topic1", "String");
         tributary.createPartition("topic1", "partition1");
         tributary.createProducer("producer1", "String", "Manual");
-        
+
         // Produce multiple events:
         int numberOfEvents = 10;
         for (int i = 0; i < numberOfEvents; i++) {
@@ -167,8 +172,10 @@ public class ParallelTest {
 
         assertEquals(numberOfEvents, tributary.getConsumers().get("consumer1").getConsumedEvents().size());
 
-        assertThrows(IllegalArgumentException.class, () -> tributary.parallelConsume("noConsumer", "partition1", numberOfEvents));
-        assertThrows(IllegalArgumentException.class, () -> tributary.parallelConsume("consumer1", "noPartition", numberOfEvents));
+        assertThrows(IllegalArgumentException.class, () ->
+        tributary.parallelConsume("noConsumer", "partition1", numberOfEvents));
+        assertThrows(IllegalArgumentException.class, () ->
+        tributary.parallelConsume("consumer1", "noPartition", numberOfEvents));
 
     }
 
@@ -191,7 +198,7 @@ public class ParallelTest {
         tributary.produceEvent("producer1", "topic1", filePathEvent1, "partition1");
 
         tributary.parallelConsume("consumer1", "partition1", 10);
-        
+
         assertEquals(1, tributary.getConsumers().get("consumer1").getConsumedEvents().size());
     }
 
@@ -210,7 +217,7 @@ public class ParallelTest {
         tributary.assignPartitionToConsumer("group1", "consumer1", "partition1");
 
         tributary.parallelConsume("consumer1", "partition1", 10);
-        
+
         assertEquals(0, tributary.getConsumers().get("consumer1").getConsumedEvents().size());
 
     }
@@ -239,7 +246,7 @@ public class ParallelTest {
         }
 
         tributary.parallelConsume("consumer1", "partition1", numberOfEvents);
-        
+
         assertEquals(numberOfEvents, tributary.getConsumers().get("consumer1").getConsumedEvents().size());
     }
 }

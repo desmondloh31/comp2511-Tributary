@@ -16,7 +16,7 @@ public class PlayBackTest {
     @DisplayName("Playback method tests")
     public void testPlayback() {
         Tributary<String> tributary = new Tributary<>();
-        
+
         tributary.createTopic("topic1", "String");
         tributary.createConsumerGroup("group1", "topic1", RebalancingMethod.ROUND_ROBIN);
         tributary.createConsumer("group1", "consumer1");
@@ -27,12 +27,11 @@ public class PlayBackTest {
         String filePathEvent1 = new File(basePathEvent1, "src/test/resources/event1.json").getAbsolutePath();
         tributary.createProducer("producer1", "String", "Manual");
         tributary.produceEvent("producer1", "topic1", filePathEvent1, "partition1");
-        
+
         assertDoesNotThrow(() -> {
             tributary.playback("consumer1", "partition1", 0);
         });
-        
-    
+
         assertThrows(IllegalArgumentException.class, () -> {
             tributary.playback("nonexistent", "partition1", 0);
         });
@@ -40,7 +39,7 @@ public class PlayBackTest {
         assertThrows(IllegalArgumentException.class, () -> {
             tributary.playback("consumer1", "nonexistent", 0);
         });
-        
+
         assertThrows(IllegalArgumentException.class, () -> {
             tributary.playback("consumer1", "partition1", 100);
         });
@@ -87,7 +86,7 @@ public class PlayBackTest {
         String basePathEvent1 = new File("").getAbsolutePath();
         String filePathEvent1 = new File(basePathEvent1, "src/test/resources/event1.json").getAbsolutePath();
         tributary.produceEvent("producer1", "topic1", filePathEvent1, "partition1");
-    
+
         tributary.createProducer("producer2", "String", "Manual");
         String basePathEvent2 = new File("").getAbsolutePath();
         String filePathEvent2 = new File(basePathEvent2, "src/test/resources/event2.json").getAbsolutePath();

@@ -27,7 +27,6 @@ public class CreatePartitionTest {
         assertTrue(tributary.getTopics().get("topic3").getPartitions().containsKey("partition3"));
     }
 
-    
     @Test
     @Tag("01-2")
     @DisplayName("Testing createPartition for non-existent topic")
@@ -68,7 +67,7 @@ public class CreatePartitionTest {
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             tributary.createPartition("topic1", "partition1");
         });
-    
+
         String expectedMessage = "Partition ID: partition1 already exists in Topic: topic1";
         String actualMessage = exception.getMessage();
         assertTrue(actualMessage.contains(expectedMessage));

@@ -46,9 +46,13 @@ public class ShowTopicConsumerGroupTest {
         System.setOut(new PrintStream(outContent));
         tributary.showTopic("topic1");
 
-        String expectedOutput = "Topic: topic1\nPartition: partition1\nEvents: \nEvent ID: " 
-                            + tributary.getTopics().get("topic1").getPartition("partition1").getEvents().keySet().iterator().next() 
-                            + ", Event: " + tributary.getTopics().get("topic1").getPartition("partition1").getEvents().values().iterator().next() + "\n";
+        String expectedOutput = "Topic: topic1\nPartition: partition1\nEvents: \nEvent ID: "
+                            + tributary.getTopics().get("topic1")
+                            .getPartition("partition1")
+                            .getEvents().keySet().iterator().next()
+                            + ", Event: " + tributary.getTopics().get("topic1")
+                            .getPartition("partition1")
+                            .getEvents().values().iterator().next() + "\n";
         assertEquals(expectedOutput, outContent.toString());
     }
 
@@ -99,7 +103,8 @@ public class ShowTopicConsumerGroupTest {
 
         tributary.showConsumerGroup("group1");
 
-        String expectedOutput = "Consumer Group: group1\n\tConsumer: consumer1\n\t\tReceiving from Partition: partition1\n";
+        String expectedOutput =
+        "Consumer Group: group1\n\tConsumer: consumer1\n\t\tReceiving from Partition: partition1\n";
         assertEquals(expectedOutput, outContent.toString());
     }
 
@@ -112,16 +117,12 @@ public class ShowTopicConsumerGroupTest {
 
         ByteArrayOutputStream outContent = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outContent));
-    
+
         tributary.showConsumerGroup("nonexistentGroup");
-    
+
         String expectedOutput = "Consumer Group: nonexistentGroup not found\n";
         assertEquals(expectedOutput, outContent.toString());
     }
-
-    
-        
-    
 
     @AfterEach
     public void restoreStreams() {

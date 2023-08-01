@@ -2,11 +2,7 @@ package tributary;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -71,7 +67,7 @@ public class ConsumerTest {
 
     @Test
     @Tag("01-3")
-    @DisplayName("Testing deleteConsumer by deleting 3 consumers") 
+    @DisplayName("Testing deleteConsumer by deleting 3 consumers")
     public void testDeleteConsumer() {
         Tributary<String> tributary = new Tributary<>();
         tributary.createTopic("topic1", "String");
@@ -85,7 +81,7 @@ public class ConsumerTest {
         tributary.createTopic("topic3", "String");
         tributary.createConsumerGroup("group3", "topic3", RebalancingMethod.ROUND_ROBIN);
         tributary.createConsumer("group3", "consumer3");
-    
+
         ConsumerGroup<String> consumerGroup1 = tributary.getConsumerGroups().get("group1");
         assertNotNull(findConsumerById(consumerGroup1.getConsumers(), "consumer1"));
         tributary.deleteConsumer("group1", "consumer1");
@@ -100,7 +96,7 @@ public class ConsumerTest {
         assertNotNull(findConsumerById(consumerGroup3.getConsumers(), "consumer3"));
         tributary.deleteConsumer("group3", "consumer3");
         assertNull(findConsumerById(consumerGroup1.getConsumers(), "consumer3"));
-    
+
     }
 
     // tests to test non-existent Ids:
@@ -147,6 +143,4 @@ public class ConsumerTest {
         return null;
     }
 
-
-      
 }

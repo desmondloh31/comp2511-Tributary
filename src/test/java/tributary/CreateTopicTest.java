@@ -35,7 +35,6 @@ public class CreateTopicTest {
         tributary.createTopic("topic2Integer", "Integer");
         tributary.createTopic("topic3Integer", "Integer");
 
-        
         assertNotNull(tributary.getTopics().get("topic1Integer"));
         assertEquals(Integer.class, tributary.getTopics().get("topic1Integer").getType());
 

@@ -15,7 +15,7 @@ public class ConsumeEventsTest {
     @Tag("01-1")
     @DisplayName("Testing consumeEvent method for 3 consumers")
     public void testConsumeEvent() {
-        
+
         Tributary<String> tributary = new Tributary<>();
         String basePathEvent1 = new File("").getAbsolutePath();
         String filePathEvent1 = new File(basePathEvent1, "src/test/resources/event1.json").getAbsolutePath();
@@ -25,9 +25,9 @@ public class ConsumeEventsTest {
         tributary.produceEvent("producer1", "topic1", filePathEvent1, "partition1");
 
         tributary.createConsumerGroup("group1", "topic1", RebalancingMethod.ROUND_ROBIN);
-        tributary.createConsumer("group1","consumer1");
-        tributary.createConsumer("group1","consumer2");
-        tributary.createConsumer("group1","consumer3");
+        tributary.createConsumer("group1", "consumer1");
+        tributary.createConsumer("group1", "consumer2");
+        tributary.createConsumer("group1", "consumer3");
 
         tributary.assignPartitionToConsumer("group1", "consumer1", "partition1");
         tributary.assignPartitionToConsumer("group1", "consumer2", "partition1");
@@ -50,10 +50,10 @@ public class ConsumeEventsTest {
         tributary.createPartition("topic1", "partition1");
         tributary.createProducer("producer1", "String", "Manual");
         tributary.produceEvent("producer1", "topic1", filePathEvent1, "partition1");
-    
+
         tributary.createConsumerGroup("group1", "topic1", RebalancingMethod.ROUND_ROBIN);
         tributary.createConsumer("group1", "consumer1");
-    
+
         assertThrows(IllegalArgumentException.class, () -> tributary.consumeEvent("consumer1", "partition1"));
     }
 
@@ -80,7 +80,7 @@ public class ConsumeEventsTest {
     @Tag("01-4")
     @DisplayName("Testing consumeEvents method for 3 consumers")
     public void testConsumeEvents() {
-         
+
         Tributary<String> tributary = new Tributary<>();
         String basePathEvent1 = new File("").getAbsolutePath();
         String filePathEvent1 = new File(basePathEvent1, "src/test/resources/event1.json").getAbsolutePath();
@@ -92,11 +92,11 @@ public class ConsumeEventsTest {
         for (int i = 0; i < 3; i++) {
             tributary.produceEvent("producer1", "topic1", filePathEvent1, "partition1");
         }
-    
+
         tributary.createConsumerGroup("group1", "topic1", RebalancingMethod.ROUND_ROBIN);
         tributary.createConsumer("group1", "consumer1");
         tributary.assignPartitionToConsumer("group1", "consumer1", "partition1");
-        
+
         tributary.consumeEvents("consumer1", "partition1", 3);
         assertEquals(3, tributary.getConsumers().get("consumer1").getConsumedEvents().size());
         assertThrows(IllegalArgumentException.class, () -> tributary.consumeEvents("noConsumer", "partition1", 1));
@@ -124,5 +124,5 @@ public class ConsumeEventsTest {
         assertEquals(1, tributary.getConsumers().get("consumer1").getConsumedEvents().size());
 
     }
-    
+
 }

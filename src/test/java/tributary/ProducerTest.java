@@ -32,7 +32,7 @@ public class ProducerTest {
         assertEquals(String.class, producer2.getType());
         assertEquals(AllocationMethod.RANDOM, producer2.getAllocationMethod());
 
-        // creating a producer with an invalid type and allocation: 
+        // creating a producer with an invalid type and allocation:
         tributary.createProducer("producer3", "randomizing", "random");
         assertNull(tributary.getProducers().get("producer3"));
     }
@@ -55,7 +55,7 @@ public class ProducerTest {
         Tributary<String> tributary = new Tributary<>();
         tributary.createTopic("topic1", "String");
         tributary.createProducer("producer2", "String", "wrong allocation");
-    
+
         assertNull(tributary.getProducers().get("producer2"));
     }
 

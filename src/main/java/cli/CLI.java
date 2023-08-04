@@ -42,7 +42,11 @@ public class CLI {
                     case "produceEvent":
                         tributary.produceEvent(command[1], command[2], command[3], command[4]);
                         break;
+                    case "assignPartitionToConsumer":
+                        tributary.assignPartitionToConsumer(command[1], command[2], command[3]);
+                        break;
                     case "consumeEvent":
+                        System.out.println("Entering consumeEvent case...");
                         tributary.consumeEvent(command[1], command[2]);
                         break;
                     case "consumeEvents":
@@ -59,6 +63,7 @@ public class CLI {
                         String[] eventFileNames = command[3].split(",");
                         List<String> eventFileNamesList = Arrays.asList(eventFileNames);
                         tributary.parallelProduce(command[1], command[2], eventFileNamesList);
+                        break;
                     case "parallelConsume":
                         int numberEvents = Integer.parseInt(command[3]);
                         tributary.parallelConsume(command[1], command[2], numberEvents);
@@ -81,6 +86,7 @@ public class CLI {
                 }
             } catch (Exception exception) {
                 System.out.println("invalid command or parameters");
+                exception.printStackTrace();
             }
         }
     }

@@ -1,7 +1,6 @@
 package tributary;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 
 public class Message<T> {
 
@@ -11,13 +10,12 @@ public class Message<T> {
     private String key;
     private T value;
 
-    public Message( LocalDateTime dateTimeCreated, String id, String payloadType, String key, T value) {
+    public Message(LocalDateTime dateTimeCreated, String id, String payloadType, String key, T value) {
         this.dateTimeCreated = dateTimeCreated;
         this.id = id;
         this.payloadType = payloadType;
         this.key = key;
         this.value = value;
-       
     }
 
     public LocalDateTime getDateTimeCreated() {

@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Map;
-import java.util.UUID;
 
 public class Partition<T> {
     private String id;

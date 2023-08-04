@@ -18,10 +18,6 @@ public class Partition<T> {
         this.events = new HashMap<>();
     }
 
-    public void addMessage(Message<T> message) {
-        messages.add(message);
-    }
-
     public Message<T> consumeMessage() {
         return messages.poll();
     }
@@ -56,9 +52,10 @@ public class Partition<T> {
     }
 
     // method for adding event:
-    public String addEvent(T event) {
-        String eventId = UUID.randomUUID().toString();
-        this.events.put(eventId, event);
-        return eventId;
+    public String addMessage(Message<T> message) {
+        String messageId = message.getId();
+        this.messages.add(message);
+        this.events.put(messageId, message.getValue());
+        return messageId;
     }
 }

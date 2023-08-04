@@ -55,31 +55,28 @@ public class Consumer<T> {
     }
 
     // helper method to consume single event:
-    public T consumeEvent(String partitionId) {
+    public Message<T> consumeEvent(String partitionId) {
         Partition<T> partition = partitions.get(partitionId);
-        if (partition != null && !partition.getEvents().isEmpty()) {
-            Map.Entry<String, T> entry = partition.getEvents().entrySet().iterator().next();
-            T event = entry.getValue();
-            partition.getEvents().remove(entry.getKey());
-            this.consumedEvents.add(event.toString());
-            return event;
+        if (partition != null && !partition.getMessages().isEmpty()) {
+            Message<T> message = partition.getMessages().poll();
+            consumedEvents.add(message.getValue().toString());
+            return message;
         }
         return null;
    }
 
     // helper method to consume multiple events:
-    public List<T> consumeEvents(String partitionId, int numOfEvents) {
+    public List<Message<T>> consumeEvents(String partitionId, int numOfEvents) {
         Partition<T> partition = partitions.get(partitionId);
-        List<T> eventsRemoved = new ArrayList<>();
+        List<Message<T>> messagesRemoved = new ArrayList<>();
         if (partition != null) {
-            Iterator<Map.Entry<String, T>> eventArrayList = partition.getEvents().entrySet().iterator();
-            while (eventArrayList.hasNext() && numOfEvents > 0) {
-                Map.Entry<String, T> entry = eventArrayList.next();
-                eventsRemoved.add(entry.getValue());
-                eventArrayList.remove();
+            while (!partition.getMessages().isEmpty() && numOfEvents > 0) {
+                Message<T> message = partition.getMessages().poll();
+                messagesRemoved.add(message);
+                consumedEvents.add(message.getValue().toString());
                 numOfEvents--;
             }
         }
-        return eventsRemoved;
+        return messagesRemoved;
     }
 }

@@ -3,6 +3,7 @@ package tributary;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.Iterator;
 
 import java.util.concurrent.ExecutorService;
@@ -12,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.LocalDateTime;
 
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -164,11 +166,18 @@ public class Tributary<T> {
         System.out.println("Parsed event: " + event);
 
         Partition<T> partition = topic.getPartition(partitionId);
+        // creating a new Message Object:
+        LocalDateTime dateTimeCreated = LocalDateTime.now();
+        String id = UUID.randomUUID().toString();
+        String payloadType = producer.getType().getName();
+        String key = partitionId;
+        Message<T> message = new Message<>(dateTimeCreated, id, payloadType, key, event);
+
         if (producer.getAllocationMethod() == AllocationMethod.MANUAL && partition != null) {
-            String eventId = partition.addEvent(event);
+            String eventId = partition.addMessage(message);
             System.out.println("Event id: " + eventId + ", was added to a partition: " + partitionId);
         } else if (producer.getAllocationMethod() == AllocationMethod.RANDOM) {
-            producer.produce(event);
+            producer.produce(message);
             System.out.println("Event id: " + event + ", was added to a random partition");
         } else {
             System.out.println("Manual partition: " + partitionId + " not found or allocation method  not manual");
@@ -191,12 +200,12 @@ public class Tributary<T> {
             + " is not allocated to the partition: " + partitionId);
         }
         if (partition != null && !partition.getEvents().isEmpty()) {
-            Map.Entry<String, T> entry = partition.getEvents().entrySet().iterator().next();
-            String eventId = entry.getKey();
-            T event = entry.getValue();
-            partition.getEvents().remove(eventId);
+            Message<T> message = partition.getMessages().poll();
+            String messageId = message.getId();
+            T event = message.getValue();
+            partition.getEvents().remove(messageId);
             consumer.getConsumedEvents().add(event.toString());
-            System.out.println("Consumed Event ID: " + eventId);
+            System.out.println("Consumed Event ID: " + messageId);
             System.out.println("Event Contents: " + event);
         } else {
             System.out.println("No event available for consumption in partition: " + partitionId);
@@ -214,14 +223,12 @@ public class Tributary<T> {
             + " not allocated to partition: " + partitionId);
         }
         if (partition != null) {
-            Iterator<Map.Entry<String, T>> eventIterator = partition.getEvents().entrySet().iterator();
-            while (eventIterator.hasNext() && numberOfEvents > 0) {
-                Map.Entry<String, T> entry = eventIterator.next();
-                String eventId = entry.getKey();
-                T event = entry.getValue();
-                eventIterator.remove();
+            while (!partition.getMessages().isEmpty() && numberOfEvents > 0) {
+                Message<T> message = partition.getMessages().poll();
+                String messageId = message.getKey();
+                T event = message.getValue();
                 consumer.getConsumedEvents().add(event.toString());
-                System.out.println("Consumed Event ID: " + eventId);
+                System.out.println("Consumed Event ID: " + messageId);
                 System.out.println("Event Contents: " + event);
                 numberOfEvents--;
             }
@@ -289,8 +296,16 @@ public class Tributary<T> {
                     return;
                 }
                 System.out.println("Parsed event: " + event);
+                // setting up the Message Object:
+                Message<T> message = new Message<>(
+                    LocalDateTime.now(),
+                    UUID.randomUUID().toString(),
+                    event.getClass().getSimpleName(),
+                    UUID.randomUUID().toString(),
+                    event);
+
                 if (producer.getAllocationMethod() == AllocationMethod.RANDOM) {
-                    String partitionId = producer.produce(event);
+                    String partitionId = producer.produce(message);
                     System.out.println("Event id: " + event + ", was added to a random partition: " + partitionId);
                 } else {
                     System.out.println("Allocation method was not random");
@@ -314,8 +329,8 @@ public class Tributary<T> {
         for (int count = 0; count < numberOfEvents; count++) {
             executorService.submit(() -> {
                 synchronized (consumer) {
-                    T event = consumer.consumeEvent(partitionId);
-                    if (event == null) {
+                    Message<T> message = consumer.consumeEvent(partitionId);
+                    if (message == null) {
                         System.out.println("No more events to consume from partition: " + partitionId);
                     } else {
                         System.out.println("Consumer: " + consumerId
